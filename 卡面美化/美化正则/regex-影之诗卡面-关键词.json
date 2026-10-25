@@ -1,0 +1,17 @@
+{
+    "id": "b4e1d8a2-6c3f-4f07-a9d5-2e8c1f0b7a63",
+    "scriptName": "影之诗卡面-关键词",
+    "findRegex": "/([【『])([^【】『』\\n<>|]{1,16}?)([】』])(?=[^<\\n]*<\\/span><!--svT-->)|(?<=[>、，,·\\/][ \\t]*)(?:(守护|突进|疾驰|必杀|吸血|潜行|无法被能力破坏)(?=[ \\t]*(?:[、，,·\\/]|<))|([^、，,·\\/<>\"=|\\n \\t]+))[ \\t]*[、，,·\\/]?[ \\t]*(?=[^<\\n]*<\\/span><!--svTg-->)/g",
+    "replaceString": "<span class=\"svK\" data-k=\"$4\">$1<span class=\"svKn\">$2$4</span>$3$5</span>",
+    "trimStrings": [],
+    "placement": [
+        2
+    ],
+    "disabled": false,
+    "markdownOnly": true,
+    "promptOnly": false,
+    "runOnEdit": true,
+    "substituteRegex": 0,
+    "minDepth": null,
+    "maxDepth": null
+}
