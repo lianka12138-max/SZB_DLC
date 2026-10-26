@@ -2,12 +2,22 @@
 // 用法: node card.mjs → regex-影之诗卡面.json、card-preview.html（两条渲染路径模拟）
 // 卡框与宝石: python tools/assets.py 生成 upload/sv/，整个 sv 目录上传到 ASSET_BASE 对应位置
 // ASSET_BASE 可用环境变量 SV_ASSET_BASE 覆盖；预览页自动改用本地 upload/sv
-import { writeFileSync, readFileSync } from 'node:fs';
+import { writeFileSync, readFileSync, readdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createHash } from 'node:crypto';
 import { frameCss, overlay } from './sv2.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
+// 素材版本号：按 upload/sv 全部文件内容算 8 位哈希，拼在图片链接后（?v=…）。
+// 素材一变链接就变，浏览器和 jsDelivr 都会取新图，不用再手动清缓存。
+const V = (() => {
+  const h = createHash('sha1');
+  const walk = (d) => readdirSync(d, { withFileTypes: true }).sort((a, b) => (a.name < b.name ? -1 : 1))
+    .forEach((e) => (e.isDirectory() ? walk(join(d, e.name)) : h.update(e.name).update(readFileSync(join(d, e.name)))));
+  walk(join(here, 'upload', 'sv'));
+  return '?v=' + h.digest('hex').slice(0, 8);
+})();
 // 外链素材根地址（结尾不带 /）。链接为 {ASSET_BASE}/frame/{类型}-{品质}.webp 与 {ASSET_BASE}/gem/{职业}.webp
 // GitHub 仓库 lianka12138-max/SZB_DLC 经 jsDelivr 分发（下划线写成 %5F，免得被 markdown 当成斜体）；国内打不开时可换 fastly.jsdelivr.net 或 raw.githubusercontent.com
 const ASSET_BASE = process.env.SV_ASSET_BASE || 'https://cdn.jsdelivr.net/gh/lianka12138-max/SZB%5FDLC@main/%E5%8D%A1%E9%9D%A2%E7%BE%8E%E5%8C%96/upload/sv';
@@ -18,19 +28,23 @@ const P = (x, y) => `${r1(x)} ${r1(y)}`;
 // 职业插画走外链（upload/sv/art），这里只画加载前、加载失败时露出的职业色渐变。
 // 同页多张卡共用同名 id，被引用的渐变/蒙版只认页面上第一份定义，所以 defs 里只用固定颜色。
 const WIN = 'x="66" y="132" width="402" height="484"';
-// 展开区四角饰（左上角朝向，其余三角镜像）：贴着圆角的一道弧形刃饰，中间一颗斜置四芒星。
-// 用 currentColor 着色，颜色由外层 .svCorn 按职业设置。
-const CORNER =
-  '<path d="M19.5 14.5C25 10 33 6.5 45 4C36 7.8 28 11.5 21 16.2Z"/>' + // 刃饰（沿上边）
-  '<path d="M14.5 19.5C10 25 6.5 33 4 45C7.8 36 11.5 28 16.2 21Z"/>' + // 刃饰（沿左边）
-  '<path d="M28 9.6C30.5 11 31.5 13 30.6 15.4C30.2 13.4 29.2 11.8 27 10.8Z" opacity=".8"/>' + // 卷须
-  '<path d="M9.6 28C11 30.5 13 31.5 15.4 30.6C13.4 30.2 11.8 29.2 10.8 27Z" opacity=".8"/>' +
-  '<path d="M10.6 10.6 17 15.4 21.95 12.05 18.6 17 23.4 23.4 17 18.6 12.05 21.95 15.4 17Z"/>' + // 斜置四芒星
-  '<circle cx="17" cy="17" r="1.2" fill="#fff" opacity=".75"/>';
+// 展开区四角饰（左上角朝向，其余三角镜像）：角上一颗斜置四芒星，两道羽状长刃沿上边、左边伸出，
+// 星旁各带一小段卷须；整体按到星的距离渐隐（蒙版 svCM）。用 currentColor 着色，颜色由外层 .svCorn 按职业设置。
+const CORNER = '<g mask="url(#svCM)">' +
+  '<path d="M16.5 11C26 6.5 38 5 54 4.5C40 6.8 28 9 18 13.2Z"/>' + // 长刃（沿上边）
+  '<path d="M11 16.5C6.5 26 5 38 4.5 54C6.8 40 9 28 13.2 18Z"/>' + // 长刃（沿左边）
+  '<path d="M20 15C28 12 36 11 46 10.5C37 12 29 13.5 21 16.4Z" opacity=".5"/>' + // 内侧细羽
+  '<path d="M15 20C12 28 11 36 10.5 46C12 37 13.5 29 16.4 21Z" opacity=".5"/>' +
+  '<path d="M16.5 16C18 19 21.5 19.5 23.5 17.5C21 18.2 18.8 17.6 17.4 15.4Z" opacity=".75"/>' + // 卷须
+  '<path d="M16 16.5C19 18 19.5 21.5 17.5 23.5C18.2 21 17.6 18.8 15.4 17.4Z" opacity=".75"/>' +
+  '<path d="M9.76 9.76 14 12.6 17.54 10.46 15.4 14 19.66 19.66 14 15.4 10.46 17.54 12.6 14Z"/>' + // 斜置四芒星
+  '</g><circle cx="14" cy="14" r="1.1" fill="#fff" opacity=".75"/>';
 const artDefs = `<defs>
 <linearGradient id="aM1G" gradientUnits="userSpaceOnUse" x1="0" y1="132" x2="0" y2="616"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#fff"/></linearGradient>
 <mask id="aM1"><rect ${WIN} fill="url(#aM1G)"/></mask>
 <radialGradient id="aVig" cx=".5" cy=".46" r=".72"><stop offset=".55" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".25"/></radialGradient>
+<radialGradient id="svCMG" gradientUnits="userSpaceOnUse" cx="14" cy="14" r="44"><stop offset=".2" stop-color="#fff"/><stop offset="1" stop-color="#fff" stop-opacity=".12"/></radialGradient>
+<mask id="svCM" maskUnits="userSpaceOnUse" x="0" y="0" width="56" height="56"><rect width="56" height="56" fill="url(#svCMG)"/></mask>
 </defs>`;
 const art = `<rect ${WIN} style="fill:var(--a0)"/><rect ${WIN} style="fill:var(--a1)" mask="url(#aM1)"/><rect ${WIN} fill="url(#aVig)"/>`;
 
@@ -66,10 +80,10 @@ const fx = skill + [14, 16, 18, 20, 22, 24]
 const texts = overlay().replace(/<g class="svGem">[\s\S]*?<\/g>/, '');
 const SV = '<svg class="svFrame" viewBox="0 0 530 687" xmlns="http://www.w3.org/2000/svg">';
 const card = (SV + art + '</svg>' +
-  `<div class="svArtI" style="background-image:url(${ASSET_BASE}/art/$1-$3.webp)"></div>` +
-  `<div class="svFrm" style="background-image:url(${ASSET_BASE}/frame/$3-$2.webp)"></div>` +
-  `<div class="svGemI" style="background-image:url(${ASSET_BASE}/gem/$1.webp)"></div>` +
-  `<div class="svFrm" style="background-image:url(${ASSET_BASE}/fg/$1-$3.webp)"></div>` +
+  `<div class="svArtI" style="background-image:url(${ASSET_BASE}/art/$1-$3.webp${V})"></div>` +
+  `<div class="svFrm" style="background-image:url(${ASSET_BASE}/frame/$3-$2.webp${V})"></div>` +
+  `<div class="svGemI" style="background-image:url(${ASSET_BASE}/gem/$1.webp${V})"></div>` +
+  `<div class="svFrm" style="background-image:url(${ASSET_BASE}/fg/$1-$3.webp${V})"></div>` +
   SV + texts + '</svg>')
   .replace('$NAME', '$5').replace('$COST', '$4').replace('$ATK', '$8').replace('$LIFE', '$9');
 // 卡牌类型符号：从者=剑、法术=星芒、护符=挂坠；三个都输出，按 data-t 只显示对应的一个
@@ -86,12 +100,12 @@ const html =
   // 栏两端与展开后分隔线中央的小菱形，颜色代表品质
   // 职业花纹：折叠条一张、展开区一张，外链透明图，按固定比例缩放贴右侧，宽度变化时只改变位置、不拉伸
   '<details class="svDet"><summary class="svSum" title="$2"><span class="svDia svDiaL"></span><span class="svDia svDiaR"></span>' +
-  `<span class="svDeco svDecoS" style="background-image:url(${ASSET_BASE}/bar/$1.webp)"></span>` +
+  `<span class="svDeco svDecoS" style="background-image:url(${ASSET_BASE}/bar/$1.webp${V})"></span>` +
   '<span class="svPCost">$4</span><span class="svSName">$5</span><span class="svSTitle">卡牌预览</span>' +
   `<span class="svSCls">$1</span><span class="svSTyp">${typeIcon}$3</span><span class="svTog"></span></summary>` +
-  `<div class="svDeco svDecoB" style="background-image:url(${ASSET_BASE}/deco/$1.webp)"></div>` +
+  `<div class="svDeco svDecoB" style="background-image:url(${ASSET_BASE}/deco/$1.webp${V})"></div>` +
   // DOMPurify 会删掉 <use>，所以四角各自内联一份路径
-  ['TL', 'TR', 'BL', 'BR'].map((p) => `<svg class="svCorn svC${p}" viewBox="0 0 48 48" aria-hidden="true">${CORNER}</svg>`).join('') +
+  ['TL', 'TR', 'BL', 'BR'].map((p) => `<svg class="svCorn svC${p}" viewBox="0 0 56 56" aria-hidden="true">${CORNER}</svg>`).join('') +
   '<div class="svRule"></div><div class="svBody">' +
   `<div class="svCard">${card}</div>` +
   '<div class="svPanel">' +
@@ -131,22 +145,14 @@ ${Object.entries(QUALITY).map(([k, c]) => `.svBox[data-q="${k}"]{--qc:${c}}`).jo
 .svBox{container-type:inline-size}
 .svSName{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .svSTitle,.svSCls,.svSTyp,.svTog{flex:0 0 auto;white-space:nowrap}
-@container (max-width:480px){
- .svDecoS{display:none}
- .svSum{gap:8px;padding-left:16px;padding-right:12px}
- .svDet[open] .svSum{padding:12px 14px 10px 18px}
- .svSTitle{font-size:20px;letter-spacing:2px}
- .svSTyp{padding-left:8px}
- .svTog{gap:6px;padding-left:10px}
- .svBox .svDet:not([open]) .svSTyp{font-size:0;gap:0}}
 .svDecoB{right:0;bottom:0;width:min(50%,440px);aspect-ratio:4/3;background-position:right bottom;border-bottom-right-radius:9px;opacity:.75}
 .svSum{z-index:1}
 .svRule,.svBody{position:relative;z-index:1}
-.svCorn{position:absolute;z-index:0;width:40px;height:40px;pointer-events:none;fill:currentColor;color:color-mix(in srgb,var(--a1) 80%,#6e5a3a);opacity:.8}
-.svCTL{left:4px;top:4px}
-.svCTR{right:4px;top:4px;transform:scaleX(-1)}
-.svCBL{left:4px;bottom:4px;transform:scaleY(-1)}
-.svCBR{right:4px;bottom:4px;transform:scale(-1)}
+.svCorn{position:absolute;z-index:0;width:50px;height:50px;pointer-events:none;fill:currentColor;color:color-mix(in srgb,var(--a1) 80%,#6e5a3a);opacity:.85}
+.svCTL{left:3px;top:3px}
+.svCTR{right:3px;top:3px;transform:scaleX(-1)}
+.svCBL{left:3px;bottom:3px;transform:scaleY(-1)}
+.svCBR{right:3px;bottom:3px;transform:scale(-1)}
 .svSum{position:relative;display:flex;align-items:center;gap:12px;padding:5px 16px 5px 20px;cursor:pointer;list-style:none;user-select:none;line-height:1.2}
 .svSum::-webkit-details-marker{display:none}
 .svDia,.svRule::after{width:7px;height:7px;border:1px solid color-mix(in srgb,var(--qc) 40%,#6a4e22);
@@ -160,10 +166,10 @@ ${Object.entries(QUALITY).map(([k, c]) => `.svBox[data-q="${k}"]{--qc:${c}}`).jo
 .svSum .svPCost{width:28px;height:28px;font-size:18px;line-height:28px;box-shadow:0 0 0 2px #d9b765,0 0 0 3px #8a6e3c}
 .svSName{font:600 15px/1.2 "Noto Serif SC","Source Han Serif SC","SimSun",serif;letter-spacing:1px;color:#2a241c}
 .svDet:not([open]) .svSCls,.svDet:not([open]) .svSTyp,.svDet:not([open]) .svTog{font-size:13px}
-.svSTitle{display:none;font:700 24px/1.2 "Noto Serif SC","Source Han Serif SC","SimSun",serif;letter-spacing:3px;color:#2a241c}
+.svSTitle{display:none;font:700 20px/1.2 "Noto Serif SC","Source Han Serif SC","SimSun",serif;letter-spacing:2px;color:#2a241c}
 .svDet[open] .svSum .svPCost,.svDet[open] .svSName{display:none}
 .svDet[open] .svSTitle{display:block}
-.svDet[open] .svSum{padding:16px 24px 14px 28px}
+.svDet[open] .svSum{padding:20px 50px 14px 52px}
 .svSCls{display:inline-flex;align-items:center;gap:7px;font-size:14px;color:#5e5038}
 .svSCls::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--gem);box-shadow:0 0 0 1px rgba(60,40,10,.18)}
 .svSTyp{display:inline-flex;align-items:center;gap:5px;padding-left:14px;border-left:1px solid #d8c9a8;font-size:14px;line-height:16px;color:#857660}
@@ -225,7 +231,17 @@ ${Object.entries(QUALITY).map(([k, c]) => `.svBox[data-q="${k}"]{--qc:${c}}`).jo
 .svPDesc{margin-top:9px;padding-top:8px;border-top:1px solid #3d3428;font:13px/1.7 "Noto Serif SC","Source Han Serif SC",serif;color:#b3a998}
 .svPDesc::before{content:"「";color:#8a7a5a}
 .svPDesc::after{content:"」";color:#8a7a5a}
-` + frameCss)
+` + frameCss + `
+@container (max-width:480px){
+ .svDecoS{display:none}
+ .svSum{gap:8px;padding-left:16px;padding-right:12px}
+ .svDet[open] .svSum{padding:16px 36px 10px 38px}
+ .svSTitle{font-size:17px;letter-spacing:1px}
+ .svCorn{width:38px;height:38px}
+ .svSTyp{padding-left:8px}
+ .svTog{gap:6px;padding-left:10px}
+ .svBox .svDet:not([open]) .svSTyp{font-size:0;gap:0}}
+`)
   .replace(/\s*\n\s*/g, '').replace(/\s*([{};,])\s*/g, '$1').replace(/;}/g, '}');
 
 // ================= 安全检查与输出 =================

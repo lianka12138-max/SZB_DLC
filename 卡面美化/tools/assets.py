@@ -52,6 +52,7 @@ def art_im(path):
     return Image.open(path).convert('RGB').resize((836, 1008), Image.LANCZOS)
 # 法术、护符没有穿框前景，用 1×1 透明图占位，免得每张卡多一个 404 请求
 blank = Image.new('RGBA', (1, 1), (0, 0, 0, 0))
+missing = set()
 for c, a in CLASS.items():
     save(Image.open(os.path.join(src, 'gems', f'{a}_宝石.png')).convert('RGBA'), os.path.join(out, 'gem', f'{c}.webp'), lossless=True)
     servant = art_im(os.path.join(art, 'illustrations', f'{a}.png'))
@@ -67,10 +68,17 @@ for c, a in CLASS.items():
         save(blank, os.path.join(out, 'fg', f'{c}-{t}.webp'), lossless=True)
     # 职业花纹（新版花纹/）：展开区为 4:3 右下角饰，整张缩到 640×480 贴右下角；
     # 折叠条为横饰，裁掉透明边后按高 120 缩放（显示高度约 30px 的 4 倍）
-    deco = Image.open(os.path.join(pattern, DECO[a][0])).convert('RGBA').resize((640, 480), Image.LANCZOS)
+    # 源图缺失时保留 upload 里已生成的花纹，不中断其余素材的生成
+    src_deco, src_bar = (os.path.join(pattern, f) for f in DECO[a])
+    if not (os.path.exists(src_deco) and os.path.exists(src_bar)):
+        missing.add(a)
+        continue
+    deco = Image.open(src_deco).convert('RGBA').resize((640, 480), Image.LANCZOS)
     save(deco, os.path.join(out, 'deco', f'{c}.webp'), quality=85)
-    bar = Image.open(os.path.join(pattern, DECO[a][1])).convert('RGBA')
+    bar = Image.open(src_bar).convert('RGBA')
     bar = bar.crop(bar.getchannel('A').getbbox())
     bar = bar.resize((round(bar.width * 120 / bar.height), 120), Image.LANCZOS)
     save(bar, os.path.join(out, 'bar', f'{c}.webp'), quality=85)
+if missing:
+    print('⚠ 缺少花纹源图，沿用已生成的 deco/bar:', '、'.join(sorted(missing)), '→', os.path.normpath(pattern))
 print(f'已生成 {n} 个文件，共 {size / 1024:.0f}KB → {os.path.normpath(out)}')
