@@ -59,7 +59,7 @@ body{margin:0;background:transparent;font-family:"Noto Sans SC","Source Han Sans
 .pkView .svSum{display:none}
 .pkView .svBox{margin:0;max-width:none}
 .pkView .svDet{border:0;background:none;box-shadow:none}
-.pkView .svDeco,.pkCell .svDeco,.pkView .svDet::before,.pkCell .svDet::before{display:none}
+.pkView .svDeco,.pkCell .svDeco,.pkView .svCorn,.pkCell .svCorn{display:none}
 .pkView .svRule{display:none}
 .pkView .svBody{padding:0}
 .pkView .svBody{flex-wrap:nowrap;align-items:flex-start;justify-content:flex-start;gap:16px}

@@ -18,6 +18,15 @@ const P = (x, y) => `${r1(x)} ${r1(y)}`;
 // 职业插画走外链（upload/sv/art），这里只画加载前、加载失败时露出的职业色渐变。
 // 同页多张卡共用同名 id，被引用的渐变/蒙版只认页面上第一份定义，所以 defs 里只用固定颜色。
 const WIN = 'x="66" y="132" width="402" height="484"';
+// 展开区四角饰（左上角朝向，其余三角镜像）：贴着圆角的一道弧形刃饰，中间一颗斜置四芒星。
+// 用 currentColor 着色，颜色由外层 .svCorn 按职业设置。
+const CORNER =
+  '<path d="M19.5 14.5C25 10 33 6.5 45 4C36 7.8 28 11.5 21 16.2Z"/>' + // 刃饰（沿上边）
+  '<path d="M14.5 19.5C10 25 6.5 33 4 45C7.8 36 11.5 28 16.2 21Z"/>' + // 刃饰（沿左边）
+  '<path d="M28 9.6C30.5 11 31.5 13 30.6 15.4C30.2 13.4 29.2 11.8 27 10.8Z" opacity=".8"/>' + // 卷须
+  '<path d="M9.6 28C11 30.5 13 31.5 15.4 30.6C13.4 30.2 11.8 29.2 10.8 27Z" opacity=".8"/>' +
+  '<path d="M10.6 10.6 17 15.4 21.95 12.05 18.6 17 23.4 23.4 17 18.6 12.05 21.95 15.4 17Z"/>' + // 斜置四芒星
+  '<circle cx="17" cy="17" r="1.2" fill="#fff" opacity=".75"/>';
 const artDefs = `<defs>
 <linearGradient id="aM1G" gradientUnits="userSpaceOnUse" x1="0" y1="132" x2="0" y2="616"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#fff"/></linearGradient>
 <mask id="aM1"><rect ${WIN} fill="url(#aM1G)"/></mask>
@@ -81,6 +90,8 @@ const html =
   '<span class="svPCost">$4</span><span class="svSName">$5</span><span class="svSTitle">卡牌预览</span>' +
   `<span class="svSCls">$1</span><span class="svSTyp">${typeIcon}$3</span><span class="svTog"></span></summary>` +
   `<div class="svDeco svDecoB" style="background-image:url(${ASSET_BASE}/deco/$1.webp)"></div>` +
+  // DOMPurify 会删掉 <use>，所以四角各自内联一份路径
+  ['TL', 'TR', 'BL', 'BR'].map((p) => `<svg class="svCorn svC${p}" viewBox="0 0 48 48" aria-hidden="true">${CORNER}</svg>`).join('') +
   '<div class="svRule"></div><div class="svBody">' +
   `<div class="svCard">${card}</div>` +
   '<div class="svPanel">' +
@@ -112,7 +123,7 @@ const css = (`
 ${Object.entries(CLASS).map(([k, c]) => `.svBox[data-c="${k}"]{${vars(c)}}`).join('')}
 ${Object.entries(QUALITY).map(([k, c]) => `.svBox[data-q="${k}"]{--qc:${c}}`).join('')}
 .svDefs{position:absolute;width:0;height:0;overflow:hidden}
-.svDet{position:relative;box-sizing:border-box;border:1px solid #d6c39b;border-radius:10px;color:#3a3226;
+.svDet{position:relative;box-sizing:border-box;border:1px solid color-mix(in srgb,var(--a1) 55%,#cdb98f);border-radius:10px;color:#3a3226;
  background:linear-gradient(180deg,color-mix(in srgb,var(--a0) 28%,#faf6ee),color-mix(in srgb,var(--a0) 50%,#f3ede0));box-shadow:inset 0 0 0 1px rgba(255,255,255,.7),0 2px 10px rgba(70,50,20,.12)}
 .svDeco{position:absolute;pointer-events:none;background-repeat:no-repeat;background-size:contain}
 .svDecoS{z-index:-1;top:3px;bottom:3px;right:92px;width:150px;background-position:right center;opacity:.85}
@@ -128,14 +139,14 @@ ${Object.entries(QUALITY).map(([k, c]) => `.svBox[data-q="${k}"]{--qc:${c}}`).jo
  .svSTyp{padding-left:8px}
  .svTog{gap:6px;padding-left:10px}
  .svBox .svDet:not([open]) .svSTyp{font-size:0;gap:0}}
-.svDecoB{right:12px;bottom:12px;width:min(46%,400px);aspect-ratio:4/3;background-position:right bottom;opacity:.6}
+.svDecoB{right:0;bottom:0;width:min(50%,440px);aspect-ratio:4/3;background-position:right bottom;border-bottom-right-radius:9px;opacity:.75}
 .svSum{z-index:1}
 .svRule,.svBody{position:relative;z-index:1}
-.svDet[open]::before{content:"";position:absolute;inset:6px;pointer-events:none;--cc:color-mix(in srgb,var(--a1) 70%,#b89a5c);background-repeat:no-repeat;
- background-image:linear-gradient(var(--cc),var(--cc)),linear-gradient(var(--cc),var(--cc)),linear-gradient(var(--cc),var(--cc)),linear-gradient(var(--cc),var(--cc)),
- linear-gradient(var(--cc),var(--cc)),linear-gradient(var(--cc),var(--cc)),linear-gradient(var(--cc),var(--cc)),linear-gradient(var(--cc),var(--cc));
- background-size:18px 1px,1px 18px,18px 1px,1px 18px,18px 1px,1px 18px,18px 1px,1px 18px;
- background-position:0 0,0 0,100% 0,100% 0,0 100%,0 100%,100% 100%,100% 100%}
+.svCorn{position:absolute;z-index:0;width:40px;height:40px;pointer-events:none;fill:currentColor;color:color-mix(in srgb,var(--a1) 80%,#6e5a3a);opacity:.8}
+.svCTL{left:4px;top:4px}
+.svCTR{right:4px;top:4px;transform:scaleX(-1)}
+.svCBL{left:4px;bottom:4px;transform:scaleY(-1)}
+.svCBR{right:4px;bottom:4px;transform:scale(-1)}
 .svSum{position:relative;display:flex;align-items:center;gap:12px;padding:5px 16px 5px 20px;cursor:pointer;list-style:none;user-select:none;line-height:1.2}
 .svSum::-webkit-details-marker{display:none}
 .svDia,.svRule::after{width:7px;height:7px;border:1px solid color-mix(in srgb,var(--qc) 40%,#6a4e22);

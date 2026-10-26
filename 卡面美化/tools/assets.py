@@ -12,7 +12,15 @@ dlc = os.path.join(here, '..', '..')
 src = os.path.join(dlc, 'shadowverse-assets')
 art = os.path.join(dlc, 'shadowverse-class-art-integrated')
 spell = os.path.join(dlc, 'shadowverse-spells-amulets', 'illustrations')
-pattern = os.path.join(dlc, 'shadowverse-fourteen-transparent-patterns')
+pattern = os.path.join(dlc, '新版花纹')
+# 素材名 → (展开区右下角饰, 折叠条横饰)
+DECO = {'精灵': ('淡雅鼠尾草叶角饰-1.png', '浅色风拂叶饰-2.png'),
+        '皇家护卫': ('下角王冠流旗饰-3.png', '淡金皇冠长剑横饰-5.png'),
+        '巫师': ('巫师淡紫月弧星轨装饰-4.png', '巫师淡紫轨道星芒装饰-7.png'),
+        '龙族': ('浅琥珀龙影流饰-8.png', '浅琥珀龙翼横饰-6.png'),
+        '梦魇': ('梦魇蔷薇弯月装饰-9.png', '淡粉月弧轻羽饰-10.png'),
+        '主教': ('淡金太阳与流翼饰纹-11.png', '淡香槟太阳横向装饰-12.png'),
+        '超越者': ('超越者淡青轨道晶环-14.png', '浅青碎环横向饰纹-13.png')}
 out = os.path.join(here, '..', 'upload', 'sv')
 for d in ('frame', 'gem', 'art', 'fg', 'deco', 'bar'):
     os.makedirs(os.path.join(out, d), exist_ok=True)
@@ -57,9 +65,12 @@ for c, a in CLASS.items():
             raise SystemExit(f'{a} {t} 插画应有 1 张，实际 {len(hits)} 张')
         save(art_im(os.path.join(spell, hits[0])), os.path.join(out, 'art', f'{c}-{t}.webp'), quality=84)
         save(blank, os.path.join(out, 'fg', f'{c}-{t}.webp'), lossless=True)
-    # 职业花纹：展开区 800×600 → 640×480，折叠条 800×200 → 480×120（显示尺寸的约 2 倍）
-    deco = Image.open(os.path.join(pattern, 'expanded', f'{a}_主题花纹.png')).convert('RGBA').resize((640, 480), Image.LANCZOS)
+    # 职业花纹（新版花纹/）：展开区为 4:3 右下角饰，整张缩到 640×480 贴右下角；
+    # 折叠条为横饰，裁掉透明边后按高 120 缩放（显示高度约 30px 的 4 倍）
+    deco = Image.open(os.path.join(pattern, DECO[a][0])).convert('RGBA').resize((640, 480), Image.LANCZOS)
     save(deco, os.path.join(out, 'deco', f'{c}.webp'), quality=85)
-    bar = Image.open(os.path.join(pattern, 'collapsed', f'{a}_折叠条花纹.png')).convert('RGBA').resize((480, 120), Image.LANCZOS)
+    bar = Image.open(os.path.join(pattern, DECO[a][1])).convert('RGBA')
+    bar = bar.crop(bar.getchannel('A').getbbox())
+    bar = bar.resize((round(bar.width * 120 / bar.height), 120), Image.LANCZOS)
     save(bar, os.path.join(out, 'bar', f'{c}.webp'), quality=85)
 print(f'已生成 {n} 个文件，共 {size / 1024:.0f}KB → {os.path.normpath(out)}')
