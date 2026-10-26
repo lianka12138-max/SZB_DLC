@@ -57,10 +57,10 @@ const fx = skill + [14, 16, 18, 20, 22, 24]
 const texts = overlay().replace(/<g class="svGem">[\s\S]*?<\/g>/, '');
 const SV = '<svg class="svFrame" viewBox="0 0 530 687" xmlns="http://www.w3.org/2000/svg">';
 const card = (SV + art + '</svg>' +
-  `<div class="svArtI" style="background-image:url(${ASSET_BASE}/art/$1.webp)"></div>` +
+  `<div class="svArtI" style="background-image:url(${ASSET_BASE}/art/$1-$3.webp)"></div>` +
   `<div class="svFrm" style="background-image:url(${ASSET_BASE}/frame/$3-$2.webp)"></div>` +
   `<div class="svGemI" style="background-image:url(${ASSET_BASE}/gem/$1.webp)"></div>` +
-  `<div class="svFrm" style="background-image:url(${ASSET_BASE}/fg/$1.webp)"></div>` +
+  `<div class="svFrm" style="background-image:url(${ASSET_BASE}/fg/$1-$3.webp)"></div>` +
   SV + texts + '</svg>')
   .replace('$NAME', '$5').replace('$COST', '$4').replace('$ATK', '$8').replace('$LIFE', '$9');
 // 卡牌类型符号：从者=剑、法术=星芒、护符=挂坠；三个都输出，按 data-t 只显示对应的一个
@@ -216,7 +216,7 @@ const regexJson = {
   minDepth: null,
   maxDepth: null,
 };
-writeFileSync(join(here, 'regex-影之诗卡面.json'), JSON.stringify(regexJson, null, 4), 'utf8');
+writeFileSync(join(here, '美化正则', 'regex-影之诗卡面.json'), JSON.stringify(regexJson, null, 4), 'utf8');
 
 // 第二条正则：卡面效果文本里的【关键词】『卡名』加样式。
 // 只处理紧接着 </span><!--svT--> 的那段文本（即卡面效果文本），不碰正文里的【】『』。必须排在卡面正则之后。
@@ -231,7 +231,7 @@ const kwJson = {
     '[ \\t]*[、，,·\\/]?[ \\t]*(?=[^<\\n]*<\\/span><!--svTg-->)/g',
   replaceString: '<span class="svK" data-k="$4">$1<span class="svKn">$2$4</span>$3$5</span>',
 };
-writeFileSync(join(here, 'regex-影之诗卡面-关键词.json'), JSON.stringify(kwJson, null, 4), 'utf8');
+writeFileSync(join(here, '美化正则', 'regex-影之诗卡面-关键词.json'), JSON.stringify(kwJson, null, 4), 'utf8');
 
 // ================= 预览（两条渲染路径） =================
 const samples = [

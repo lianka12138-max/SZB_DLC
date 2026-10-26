@@ -7,8 +7,8 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const cardRx = JSON.parse(readFileSync(join(here, 'regex-影之诗卡面.json'), 'utf8'));
-const kwRx = JSON.parse(readFileSync(join(here, 'regex-影之诗卡面-关键词.json'), 'utf8'));
+const cardRx = JSON.parse(readFileSync(join(here, '美化正则', 'regex-影之诗卡面.json'), 'utf8'));
+const kwRx = JSON.parse(readFileSync(join(here, '美化正则', 'regex-影之诗卡面-关键词.json'), 'utf8'));
 
 // 卡面模板：拆出样式；$N 占位符改成 §N§（酒馆会把替换文本里的 $数字 当捕获组替换掉）
 let tpl = cardRx.replaceString;
@@ -197,7 +197,7 @@ const regexJson = {
   minDepth: null,
   maxDepth: 0,
 };
-writeFileSync(join(here, 'regex-影之诗卡包.json'), JSON.stringify(regexJson, null, 4), 'utf8');
+writeFileSync(join(here, '美化正则', 'regex-影之诗卡包.json'), JSON.stringify(regexJson, null, 4), 'utf8');
 
 // ================= 本地预览：模拟酒馆助手接口与 MVU 数据 =================
 const sample = {
