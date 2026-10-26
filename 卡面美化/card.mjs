@@ -75,9 +75,12 @@ const html =
   // 默认收起：只显示一条卡名栏，点击展开卡面与面板；栏顶中央的宝石颜色代表品质
   `<svg class="svDefs" width="0" height="0" aria-hidden="true">${artDefs}</svg>` +
   // 栏两端与展开后分隔线中央的小菱形，颜色代表品质
+  // 职业花纹：折叠条一张、展开区一张，外链透明图，按固定比例缩放贴右侧，宽度变化时只改变位置、不拉伸
   '<details class="svDet"><summary class="svSum" title="$2"><span class="svDia svDiaL"></span><span class="svDia svDiaR"></span>' +
+  `<span class="svDeco svDecoS" style="background-image:url(${ASSET_BASE}/bar/$1.webp)"></span>` +
   '<span class="svPCost">$4</span><span class="svSName">$5</span><span class="svSTitle">卡牌预览</span>' +
   `<span class="svSCls">$1</span><span class="svSTyp">${typeIcon}$3</span><span class="svTog"></span></summary>` +
+  `<div class="svDeco svDecoB" style="background-image:url(${ASSET_BASE}/deco/$1.webp)"></div>` +
   '<div class="svRule"></div><div class="svBody">' +
   `<div class="svCard">${card}</div>` +
   '<div class="svPanel">' +
@@ -110,19 +113,42 @@ ${Object.entries(CLASS).map(([k, c]) => `.svBox[data-c="${k}"]{${vars(c)}}`).joi
 ${Object.entries(QUALITY).map(([k, c]) => `.svBox[data-q="${k}"]{--qc:${c}}`).join('')}
 .svDefs{position:absolute;width:0;height:0;overflow:hidden}
 .svDet{position:relative;box-sizing:border-box;border:1px solid #d6c39b;border-radius:10px;color:#3a3226;
- background:linear-gradient(180deg,#f9f5ec,#f2ecdf);box-shadow:inset 0 0 0 1px rgba(255,255,255,.7),0 2px 10px rgba(70,50,20,.12)}
-.svSum{position:relative;display:flex;align-items:center;gap:14px;padding:9px 18px 9px 22px;cursor:pointer;list-style:none;user-select:none;line-height:1.2}
+ background:linear-gradient(180deg,color-mix(in srgb,var(--a0) 28%,#faf6ee),color-mix(in srgb,var(--a0) 50%,#f3ede0));box-shadow:inset 0 0 0 1px rgba(255,255,255,.7),0 2px 10px rgba(70,50,20,.12)}
+.svDeco{position:absolute;pointer-events:none;background-repeat:no-repeat;background-size:contain}
+.svDecoS{z-index:-1;top:3px;bottom:3px;right:92px;width:150px;background-position:right center;opacity:.85}
+.svDet[open] .svDecoS{top:9px;bottom:7px;right:104px;width:160px}
+.svBox{container-type:inline-size}
+.svSName{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.svSTitle,.svSCls,.svSTyp,.svTog{flex:0 0 auto;white-space:nowrap}
+@container (max-width:480px){
+ .svDecoS{display:none}
+ .svSum{gap:8px;padding-left:16px;padding-right:12px}
+ .svDet[open] .svSum{padding:12px 14px 10px 18px}
+ .svSTitle{font-size:20px;letter-spacing:2px}
+ .svSTyp{padding-left:8px}
+ .svTog{gap:6px;padding-left:10px}
+ .svBox .svDet:not([open]) .svSTyp{font-size:0;gap:0}}
+.svDecoB{right:12px;bottom:12px;width:min(46%,400px);aspect-ratio:4/3;background-position:right bottom;opacity:.6}
+.svSum{z-index:1}
+.svRule,.svBody{position:relative;z-index:1}
+.svDet[open]::before{content:"";position:absolute;inset:6px;pointer-events:none;--cc:color-mix(in srgb,var(--a1) 70%,#b89a5c);background-repeat:no-repeat;
+ background-image:linear-gradient(var(--cc),var(--cc)),linear-gradient(var(--cc),var(--cc)),linear-gradient(var(--cc),var(--cc)),linear-gradient(var(--cc),var(--cc)),
+ linear-gradient(var(--cc),var(--cc)),linear-gradient(var(--cc),var(--cc)),linear-gradient(var(--cc),var(--cc)),linear-gradient(var(--cc),var(--cc));
+ background-size:18px 1px,1px 18px,18px 1px,1px 18px,18px 1px,1px 18px,18px 1px,1px 18px;
+ background-position:0 0,0 0,100% 0,100% 0,0 100%,0 100%,100% 100%,100% 100%}
+.svSum{position:relative;display:flex;align-items:center;gap:12px;padding:5px 16px 5px 20px;cursor:pointer;list-style:none;user-select:none;line-height:1.2}
 .svSum::-webkit-details-marker{display:none}
-.svDia,.svRule::after{width:7px;height:7px;border:1px solid #c4a86c;
- background:linear-gradient(135deg,color-mix(in srgb,var(--qc) 30%,#fff),var(--qc) 50%,color-mix(in srgb,var(--qc) 60%,#000))}
-.svDia{position:absolute;top:50%;transform:translateY(-50%) rotate(45deg)}
-.svDiaL{left:-5px}
-.svDiaR{right:-5px}
+.svDia,.svRule::after{width:7px;height:7px;border:1px solid color-mix(in srgb,var(--qc) 40%,#6a4e22);
+ background:linear-gradient(135deg,color-mix(in srgb,var(--qc) 70%,#fff),var(--qc) 40%,color-mix(in srgb,var(--qc) 55%,#1e1430))}
+.svDia{position:absolute;top:50%;width:10px;height:10px;transform:translateY(-50%) rotate(45deg);box-shadow:0 0 0 1px rgba(255,255,255,.55)}
+.svDiaL{left:-7px}
+.svDiaR{right:-7px}
 .svBox[data-q="传说"] .svDia,.svBox[data-q="史诗"] .svDia,.svBox[data-q="神话"] .svDia,
 .svBox[data-q="传说"] .svRule::after,.svBox[data-q="史诗"] .svRule::after,.svBox[data-q="神话"] .svRule::after{box-shadow:0 0 6px 1px color-mix(in srgb,var(--qc) 65%,transparent)}
 .svDet[open] .svDia{display:none}
-.svSum .svPCost{width:34px;height:34px;font-size:22px;line-height:34px;box-shadow:0 0 0 2px #d9b765,0 0 0 3px #8a6e3c}
-.svSName{font:600 17px/1.2 "Noto Serif SC","Source Han Serif SC","SimSun",serif;letter-spacing:1px;color:#2a241c}
+.svSum .svPCost{width:28px;height:28px;font-size:18px;line-height:28px;box-shadow:0 0 0 2px #d9b765,0 0 0 3px #8a6e3c}
+.svSName{font:600 15px/1.2 "Noto Serif SC","Source Han Serif SC","SimSun",serif;letter-spacing:1px;color:#2a241c}
+.svDet:not([open]) .svSCls,.svDet:not([open]) .svSTyp,.svDet:not([open]) .svTog{font-size:13px}
 .svSTitle{display:none;font:700 24px/1.2 "Noto Serif SC","Source Han Serif SC","SimSun",serif;letter-spacing:3px;color:#2a241c}
 .svDet[open] .svSum .svPCost,.svDet[open] .svSName{display:none}
 .svDet[open] .svSTitle{display:block}

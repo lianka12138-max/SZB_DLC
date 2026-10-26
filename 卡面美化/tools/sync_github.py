@@ -5,6 +5,7 @@ import base64, glob, json, os, subprocess, sys, urllib.parse, urllib.request
 REPO, BRANCH, PREFIX = 'lianka12138-max/SZB_DLC', 'main', '卡面美化'
 root = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
 PATTERNS = ['upload/sv/art/*.webp', 'upload/sv/fg/*.webp', 'upload/sv/frame/*.webp', 'upload/sv/gem/*.webp',
+            'upload/sv/deco/*.webp', 'upload/sv/bar/*.webp',
             '美化正则/*.json', '美化正则/*.zip', 'card.mjs', 'panel.mjs', 'tools/assets.py', 'tools/pack.py',
             'tools/sync_github.py', 'card-preview.html', 'panel-preview.html']
 msg = sys.argv[1] if len(sys.argv) > 1 else '更新卡面美化'

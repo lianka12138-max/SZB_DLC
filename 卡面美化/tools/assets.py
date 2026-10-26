@@ -12,8 +12,9 @@ dlc = os.path.join(here, '..', '..')
 src = os.path.join(dlc, 'shadowverse-assets')
 art = os.path.join(dlc, 'shadowverse-class-art-integrated')
 spell = os.path.join(dlc, 'shadowverse-spells-amulets', 'illustrations')
+pattern = os.path.join(dlc, 'shadowverse-fourteen-transparent-patterns')
 out = os.path.join(here, '..', 'upload', 'sv')
-for d in ('frame', 'gem', 'art', 'fg'):
+for d in ('frame', 'gem', 'art', 'fg', 'deco', 'bar'):
     os.makedirs(os.path.join(out, d), exist_ok=True)
 for d in ('gem',):  # 清掉旧职业名留下的文件
     for f in os.listdir(os.path.join(out, d)):
@@ -56,4 +57,9 @@ for c, a in CLASS.items():
             raise SystemExit(f'{a} {t} 插画应有 1 张，实际 {len(hits)} 张')
         save(art_im(os.path.join(spell, hits[0])), os.path.join(out, 'art', f'{c}-{t}.webp'), quality=84)
         save(blank, os.path.join(out, 'fg', f'{c}-{t}.webp'), lossless=True)
+    # 职业花纹：展开区 800×600 → 640×480，折叠条 800×200 → 480×120（显示尺寸的约 2 倍）
+    deco = Image.open(os.path.join(pattern, 'expanded', f'{a}_主题花纹.png')).convert('RGBA').resize((640, 480), Image.LANCZOS)
+    save(deco, os.path.join(out, 'deco', f'{c}.webp'), quality=85)
+    bar = Image.open(os.path.join(pattern, 'collapsed', f'{a}_折叠条花纹.png')).convert('RGBA').resize((480, 120), Image.LANCZOS)
+    save(bar, os.path.join(out, 'bar', f'{c}.webp'), quality=85)
 print(f'已生成 {n} 个文件，共 {size / 1024:.0f}KB → {os.path.normpath(out)}')
